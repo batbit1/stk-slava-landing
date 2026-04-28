@@ -72,7 +72,8 @@ function PhoneInput({ value, onChange, hasError, id, name }) {
       id={id}
       name={name}
       type="tel"
-      inputMode="numeric"
+      inputMode="tel"
+      autoComplete="tel"
       value={value || '+7'}
       onChange={handleChange}
       onKeyDown={handleKeyDown}
@@ -213,6 +214,7 @@ function LeadForm() {
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState('idle') // idle | loading | success | error
   const [isLoading, setIsLoading] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   function validate() {
     const e = {}
@@ -235,7 +237,8 @@ function LeadForm() {
     const childAge = form.age
     console.log('FORM VALUES:', { name, phone, childAge })
 
-    const phoneDigits = normalizePhoneForSubmit(phone)
+    const normalized = normalizePhoneForSubmit(phone)
+    const phoneDigits = normalized.replace(/\D/g, '')
     console.log('PHONE DIGITS:', phoneDigits)
 
     const errs = validate()
@@ -243,7 +246,12 @@ function LeadForm() {
       setErrors(errs)
       return
     }
+    if (phoneDigits.length !== 11 || phoneDigits[0] !== '7') {
+      setErrors(prev => ({ ...prev, phone: 'Введите корректный номер телефона' }))
+      return
+    }
     setErrors({})
+    setSubmitError('')
     try {
       setIsLoading(true)
       setStatus('loading')
@@ -256,6 +264,7 @@ function LeadForm() {
       setStatus('success')
     } catch (err) {
       console.error('MOBILE FORM ERROR:', err)
+      setSubmitError(err?.message || 'Не удалось отправить заявку')
       setStatus('error')
     } finally {
       setIsLoading(false)
@@ -266,6 +275,7 @@ function LeadForm() {
     setForm(f => ({ ...f, [field]: value }))
     if (errors[field]) setErrors(e => ({ ...e, [field]: undefined }))
     if (status === 'error') setStatus('idle')
+    if (submitError) setSubmitError('')
   }
 
   return (
@@ -335,7 +345,7 @@ function LeadForm() {
                 transition={{ duration: 0.25 }}
                 className="rounded-xl border border-[#ff5a5a]/30 bg-[#ff5a5a]/10 px-4 py-3 text-sm text-[#ff9090]"
               >
-                Не удалось отправить заявку. Попробуйте ещё раз или напишите нам напрямую.
+                {submitError || 'Не удалось отправить заявку. Попробуйте ещё раз или напишите нам напрямую.'}
               </motion.div>
             )}
           </AnimatePresence>
