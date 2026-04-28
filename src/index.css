@@ -1,0 +1,586 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --color-surface: #0c0c0f;
+  --color-surface-elevated: #121218;
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-accent: #D6FF00;
+  --color-accent-muted: rgba(214, 255, 0, 0.15);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: #070708;
+  color: rgba(255, 255, 255, 0.88);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+/* Hero: бегущий scroll-индикатор */
+@keyframes hero-scroll-pulse {
+  0%, 100% { opacity: 0.15; transform: scaleY(0.6); }
+  50%       { opacity: 0.55; transform: scaleY(1); }
+}
+.hero-scroll-line {
+  animation: hero-scroll-pulse 1.9s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+/* Hero: shimmer sweep по кнопке */
+@keyframes hero-btn-shimmer {
+  0%   { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(220%) skewX(-20deg); }
+}
+.hero-btn-shimmer {
+  animation: hero-btn-shimmer 1.8s ease-in-out infinite;
+}
+
+/* Hero: мерцающий glow вокруг #D6FF00 текста */
+@keyframes hero-glow-pulse {
+  0%, 100% { text-shadow: 0 0 40px rgba(214,255,0,0.18), 0 0 80px rgba(214,255,0,0.06); }
+  50%       { text-shadow: 0 0 60px rgba(214,255,0,0.28), 0 0 120px rgba(214,255,0,0.10); }
+}
+.hero-accent-glow {
+  animation: hero-glow-pulse 3.5s ease-in-out infinite;
+}
+
+/* Hero heading: premium hover sweep (desktop only) */
+.hero-heading-premium {
+  transform: translate3d(0, 0, 0);
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.hero-heading-line {
+  position: relative;
+  transform: translate3d(0, 0, 0);
+  transition:
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    text-shadow 420ms ease;
+  will-change: transform, text-shadow;
+}
+
+.hero-heading-line::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    108deg,
+    rgba(255, 255, 255, 0) 38%,
+    rgba(255, 255, 255, 0.92) 50%,
+    rgba(255, 255, 255, 0) 62%
+  );
+  background-size: 220% 100%;
+  background-position: 140% 50%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hero-heading-line--accent {
+  text-shadow: 0 0 44px rgba(214, 255, 0, 0.18), 0 0 90px rgba(214, 255, 0, 0.09);
+}
+
+@keyframes hero-heading-sweep {
+  0% {
+    background-position: 145% 50%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.85;
+  }
+  72% {
+    opacity: 0.9;
+  }
+  100% {
+    background-position: -35% 50%;
+    opacity: 0;
+  }
+}
+
+@media (hover: hover) and (min-width: 768px) {
+  .hero-heading-premium:hover {
+    transform: translate3d(0, -2px, 0) scale(1.015);
+  }
+
+  .hero-heading-premium:hover .hero-heading-line--base {
+    transform: translate3d(3px, 0, 0);
+  }
+
+  .hero-heading-premium:hover .hero-heading-line--accent {
+    transform: translate3d(4px, 0, 0) scale(1.015);
+    text-shadow:
+      0 0 56px rgba(214, 255, 0, 0.36),
+      0 0 120px rgba(214, 255, 0, 0.18),
+      0 0 14px rgba(214, 255, 0, 0.58);
+  }
+
+  .hero-heading-premium:hover .hero-heading-line::after {
+    animation: hero-heading-sweep 860ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes bg-streak-fall {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(300%); }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hero-gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Мягкий «дорогой» перелив текста — длинный цикл, ease-in-out, без резких скачков */
+.hero-gradient-eyebrow {
+  font-family: var(--font-sans);
+  background-image: linear-gradient(
+    100deg,
+    rgba(250, 246, 240, 0.95) 0%,
+    rgba(232, 220, 200, 0.92) 28%,
+    rgba(210, 198, 170, 0.9) 48%,
+    rgba(198, 204, 212, 0.88) 72%,
+    rgba(248, 244, 238, 0.96) 100%
+  );
+  background-size: 220% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: hero-gradient-shift 22s ease-in-out infinite alternate;
+}
+
+.hero-gradient-title {
+  font-family: 'Sora', var(--font-sans);
+  background-image: linear-gradient(
+    108deg,
+    #faf7f2 0%,
+    #ebe3d4 16%,
+    #d8c9a8 34%,
+    #e6dfd2 50%,
+    #c5cad2 66%,
+    #f2ede6 82%,
+    #faf7f2 100%
+  );
+  background-size: 260% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: hero-gradient-shift 17s ease-in-out infinite alternate;
+}
+
+.animate-hero-1 {
+  animation: fade-up 1s ease-out 0.08s both;
+}
+.animate-hero-2 {
+  animation: fade-up 1s ease-out 0.22s both;
+}
+.animate-hero-3 {
+  animation: fade-up 1s ease-out 0.38s both;
+}
+.animate-hero-4 {
+  animation: fade-up 1s ease-out 0.52s both;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.7s ease-out,
+    transform 0.7s ease-out;
+}
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes direction-card-ken {
+  0% {
+    transform: scale(1.05) translate3d(0, 0, 0);
+  }
+  100% {
+    transform: scale(1.08) translate3d(-1.1%, 0.35%, 0);
+  }
+}
+
+.direction-card-media {
+  will-change: transform;
+  animation: direction-card-ken 22s ease-in-out infinite alternate;
+}
+
+.direction-fan-card {
+  transform: translateY(0) scale(1) rotate(0deg);
+  transition:
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.42s ease,
+    filter 0.42s ease;
+  box-shadow:
+    0 24px 50px -30px rgba(0, 0, 0, 0.86),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+@media (min-width: 768px) {
+  .direction-fan-card {
+    transform: rotate(var(--card-tilt, 0deg));
+  }
+}
+
+article.direction-fan-card:hover .direction-card-media,
+article.direction-fan-card:focus-within .direction-card-media {
+  animation-play-state: paused;
+  transform: scale(1.11);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Fan: затемнить только карточки без hover и без фокуса внутри */
+.direction-fan:has(.direction-fan-card:hover) .direction-fan-card:not(:hover):not(:focus-within),
+.direction-fan:has(.direction-fan-card:focus-within) .direction-fan-card:not(:focus-within):not(:hover) {
+  opacity: 0.86;
+  filter: brightness(0.92) saturate(0.95);
+}
+
+.direction-fan:has(.direction-fan-card:hover) .direction-fan-card:not(:hover):not(:focus-within) .direction-fan-dim,
+.direction-fan:has(.direction-fan-card:focus-within)
+  .direction-fan-card:not(:focus-within):not(:hover)
+  .direction-fan-dim {
+  background-color: rgba(0, 0, 0, 0.58) !important;
+}
+
+.direction-fan-card:hover,
+.direction-fan-card:focus-within {
+  z-index: 55 !important;
+  transform: translateY(-8px) scale(1.03) rotate(0deg);
+  border-color: rgba(201, 169, 98, 0.28);
+  box-shadow:
+    0 38px 84px -34px rgba(0, 0, 0, 0.9),
+    0 0 54px -22px rgba(201, 169, 98, 0.2),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+.direction-fan-title {
+  transition:
+    color 0.36s ease,
+    letter-spacing 0.36s ease,
+    text-shadow 0.36s ease;
+}
+
+.direction-fan-card:hover .direction-fan-title,
+.direction-fan-card:focus-within .direction-fan-title {
+  color: #fbf7ef;
+  letter-spacing: 0.01em;
+  text-shadow: 0 8px 24px rgba(0, 0, 0, 0.52);
+}
+
+.direction-fan-link {
+  opacity: 0.7;
+  transform: translateY(5px);
+  transition:
+    opacity 0.36s ease,
+    transform 0.36s ease;
+}
+
+.direction-fan-card:hover .direction-fan-link,
+.direction-fan-card:focus-within .direction-fan-link {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Раскрытие описания только на md+; на мобиле — всегда видно */
+.direction-fan-expand {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.direction-fan-expand-inner {
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 0.125rem;
+}
+
+@media (min-width: 768px) {
+  .direction-fan-expand {
+    grid-template-rows: 0fr;
+  }
+
+  .direction-fan-card:hover .direction-fan-expand,
+  .direction-fan-card:focus-within .direction-fan-expand {
+    grid-template-rows: 1fr;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PREMIUM MICRO-INTERACTIONS
+   CSS-driven: faster than JS handlers, respects hover/motion prefs.
+   All transition props are set here; components just add the class.
+═══════════════════════════════════════════════════════════════ */
+
+/* ── 1. Card hover — lift + YLW border glow ─────────────────── */
+.card-hover {
+  transition:
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 300ms ease,
+    background-color 300ms ease,
+    box-shadow 300ms ease;
+  will-change: transform;
+}
+
+@media (hover: hover) {
+  .card-hover:hover {
+    transform: translateY(-5px);
+    border-color: rgba(214, 255, 0, 0.26) !important;
+    background-color: rgba(214, 255, 0, 0.055) !important;
+    box-shadow:
+      0 0 0 1px rgba(214, 255, 0, 0.08),
+      0 14px 44px rgba(214, 255, 0, 0.07),
+      0 4px 16px rgba(0, 0, 0, 0.28);
+  }
+
+  /* Number badge inside a card glows when parent is hovered */
+  .card-hover:hover .num-badge {
+    background-color: rgba(214, 255, 0, 0.14) !important;
+    box-shadow: 0 0 14px rgba(214, 255, 0, 0.24);
+  }
+
+  /* Accent bottom line grows */
+  .card-hover:hover .accent-line {
+    width: 56px;
+  }
+}
+
+/* ── 2. Step row hover (TrainingProgram) ─────────────────────── */
+/*  .step-hover wraps both the number bubble and the content card  */
+.step-card {
+  transition:
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 300ms ease,
+    background-color 300ms ease,
+    box-shadow 300ms ease;
+}
+
+@media (hover: hover) {
+  .step-hover:hover .step-card {
+    transform: translateY(-4px);
+    border-color: rgba(214, 255, 0, 0.22) !important;
+    background-color: rgba(214, 255, 0, 0.05) !important;
+    box-shadow:
+      0 8px 28px rgba(214, 255, 0, 0.06),
+      0 3px 12px rgba(0, 0, 0, 0.22);
+  }
+
+  .step-hover:hover .num-badge {
+    background-color: rgba(214, 255, 0, 0.14) !important;
+    box-shadow: 0 0 16px rgba(214, 255, 0, 0.24);
+    transform: scale(1.08);
+  }
+}
+
+/* ── 3. Number badge (shared between Safety & TrainingProgram) ── */
+.num-badge {
+  transition:
+    background-color 300ms ease,
+    box-shadow 300ms ease,
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── 4. Accent bottom line (WhyUs cards) ────────────────────── */
+.accent-line {
+  width: 32px;
+  height: 1px;
+  background-color: rgba(214, 255, 0, 0.45);
+  transition: width 300ms ease;
+}
+
+/* ── 5. Image zoom on hover ──────────────────────────────────── */
+.img-zoom {
+  overflow: hidden;
+}
+
+.img-zoom img {
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) {
+  .img-zoom:hover img {
+    transform: scale(1.05);
+  }
+}
+
+/* ── 6. YLW primary CTA button — shimmer sweep + lift ────────── */
+.btn-ylw {
+  position: relative;
+  overflow: hidden;
+  transition:
+    box-shadow 300ms ease,
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+/* Shimmer sweep pseudo-element */
+.btn-ylw::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.28) 50%,
+    transparent 65%
+  );
+  transform: translateX(-130%);
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .btn-ylw:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      0 8px 30px rgba(214, 255, 0, 0.42),
+      0 2px 8px rgba(0, 0, 0, 0.20);
+  }
+
+  .btn-ylw:hover::after {
+    transform: translateX(130%);
+    transition: transform 0.55s ease;
+  }
+}
+
+.btn-ylw:active {
+  transform: scale(0.97) !important;
+  transition-duration: 100ms !important;
+}
+
+/* ── prefers-reduced-motion: flatten all micro-interactions ───── */
+@media (prefers-reduced-motion: reduce) {
+  .card-hover,
+  .step-card,
+  .num-badge,
+  .accent-line,
+  .img-zoom img,
+  .btn-ylw {
+    transition: none !important;
+    will-change: auto;
+  }
+
+  .card-hover:hover,
+  .step-hover:hover .step-card,
+  .step-hover:hover .num-badge,
+  .btn-ylw:hover,
+  .btn-ylw:active {
+    transform: none !important;
+  }
+
+  .btn-ylw::after,
+  .btn-ylw:hover::after {
+    display: none;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-hero-1,
+  .animate-hero-2,
+  .animate-hero-3,
+  .animate-hero-4 {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .hero-gradient-eyebrow,
+  .hero-gradient-title {
+    animation: none !important;
+    background: none !important;
+    -webkit-text-fill-color: #f2ede6;
+    color: #f2ede6;
+  }
+
+  .hero-heading-premium,
+  .hero-heading-line,
+  .hero-heading-premium:hover,
+  .hero-heading-premium:hover .hero-heading-line {
+    transition: none !important;
+    transform: none !important;
+    text-shadow: none !important;
+  }
+
+  .hero-heading-line::after {
+    display: none !important;
+    animation: none !important;
+  }
+
+  .reveal,
+  .reveal-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .direction-card-media {
+    animation: none !important;
+  }
+
+  article.direction-fan-card:hover .direction-card-media,
+  article.direction-fan-card:focus-within .direction-card-media {
+    transform: scale(1.04);
+    transition: transform 0.35s ease;
+  }
+
+  .direction-fan-card,
+  .direction-fan-card:hover,
+  .direction-fan-card:focus-within {
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .direction-fan-expand {
+    grid-template-rows: 1fr;
+    transition: none;
+  }
+
+  .direction-fan:has(.direction-fan-card:hover) .direction-fan-card:not(:hover):not(:focus-within),
+  .direction-fan:has(.direction-fan-card:focus-within) .direction-fan-card:not(:focus-within):not(:hover) {
+    opacity: 1 !important;
+    filter: none !important;
+  }
+}
