@@ -485,6 +485,18 @@ article.direction-fan-card:focus-within .direction-card-media {
   transition-duration: 100ms !important;
 }
 
+/* Mobile directions: horizontal swipe slider */
+.mobile-directions-slider {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+}
+
+.mobile-directions-slider::-webkit-scrollbar {
+  display: none;
+}
+
 /* ── prefers-reduced-motion: flatten all micro-interactions ───── */
 @media (prefers-reduced-motion: reduce) {
   .card-hover,

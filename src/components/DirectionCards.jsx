@@ -362,6 +362,39 @@ function DesktopShowcase({ sectionRef }) {
 
 /* ─── Mobile: vertical card list ──────────────────────────────────────────── */
 function MobileList() {
+  const sliderRef = useRef(null)
+  const cardRefs = useRef([])
+  const [activeMobileDirectionIndex, setActiveMobileDirectionIndex] = useState(0)
+
+  const handleMobileSliderScroll = () => {
+    const slider = sliderRef.current
+    if (!slider) return
+
+    const sliderCenter = slider.scrollLeft + slider.clientWidth / 2
+    let nextIdx = 0
+    let minDistance = Number.POSITIVE_INFINITY
+
+    cardRefs.current.forEach((card, idx) => {
+      if (!card) return
+      const cardCenter = card.offsetLeft + card.clientWidth / 2
+      const dist = Math.abs(cardCenter - sliderCenter)
+      if (dist < minDistance) {
+        minDistance = dist
+        nextIdx = idx
+      }
+    })
+
+    if (nextIdx !== activeMobileDirectionIndex) {
+      setActiveMobileDirectionIndex(nextIdx)
+    }
+  }
+
+  const scrollToMobileDirection = (idx) => {
+    const card = cardRefs.current[idx]
+    if (!card) return
+    card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+  }
+
   return (
     <div className="px-5 py-20 sm:px-8">
       {/* Section header */}
@@ -384,60 +417,141 @@ function MobileList() {
         </p>
       </div>
 
-      {/* Cards */}
-      <div className="flex flex-col gap-3">
-        {DIRS.map((d, i) => (
-          <motion.div
-            key={d.n}
-            initial={{ opacity: 0, y: 22 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.5, ease: EASE, delay: i * 0.06 }}
-            className="card-hover rounded-2xl border p-5"
-            style={{
-              borderColor: `rgba(${YLW_RGB},0.10)`,
-              backgroundColor: `rgba(${YLW_RGB},0.03)`,
-            }}
-          >
-            {/* Card header */}
-            <div className="mb-3 flex items-center gap-3">
-              <span
-                className="num-badge flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-[0.58rem] font-black tabular-nums"
+      {/* Mobile swipe slider */}
+      <div
+        ref={sliderRef}
+        className="mobile-directions-slider -mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 sm:-mx-8 sm:px-8"
+        aria-label="Слайдер направлений подготовки"
+        onScroll={handleMobileSliderScroll}
+      >
+        {DIRS.map((d, i) => {
+          const isActive = i === activeMobileDirectionIndex
+          return (
+            <article
+              key={d.n}
+              ref={(el) => { cardRefs.current[i] = el }}
+              className="relative h-[72vh] min-h-[560px] w-[88vw] max-w-[560px] shrink-0 snap-center overflow-hidden rounded-3xl border"
+              style={{
+                borderColor: `rgba(${YLW_RGB},${isActive ? '0.28' : '0.18'})`,
+                boxShadow: isActive
+                  ? `0 0 0 1px rgba(${YLW_RGB},0.12), 0 12px 38px rgba(${YLW_RGB},0.14), 0 8px 22px rgba(0,0,0,0.45)`
+                  : '0 8px 24px rgba(0,0,0,0.38)',
+                backgroundColor: '#0a0a0b',
+              }}
+            >
+              <div
+                className="absolute inset-0"
+                aria-hidden
                 style={{
-                  borderColor: `rgba(${YLW_RGB},0.30)`,
-                  backgroundColor: `rgba(${YLW_RGB},0.07)`,
-                  color: YLW,
+                  backgroundImage: `url(${d.image})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
                 }}
-              >
-                {d.n}
-              </span>
-              <div>
-                <p className="text-[0.55rem] font-bold uppercase tracking-[0.2em] text-white/38">{d.label}</p>
-                <h3 className="text-base font-semibold text-white leading-tight">{d.title}</h3>
+              />
+              <div
+                className="absolute inset-0"
+                aria-hidden
+                style={{
+                  background: `linear-gradient(to top, rgba(7,7,8,0.96) 0%, rgba(7,7,8,0.72) 42%, rgba(7,7,8,0.38) 70%, rgba(7,7,8,0.52) 100%)`,
+                }}
+              />
+
+              <div className="absolute inset-0 flex flex-col justify-between p-5">
+                <div className="flex items-center justify-between">
+                  <span
+                    className="rounded-full border px-3 py-1 text-[0.58rem] font-black tabular-nums tracking-[0.18em]"
+                    style={{
+                      borderColor: `rgba(${YLW_RGB},0.30)`,
+                      color: YLW,
+                      backgroundColor: `rgba(${YLW_RGB},0.08)`,
+                    }}
+                  >
+                    {d.n}/05
+                  </span>
+                  <span className="text-[0.55rem] font-bold uppercase tracking-[0.26em] text-white/55">
+                    {d.label}
+                  </span>
+                </div>
+
+                <div>
+                  <h3
+                    className="font-black uppercase leading-[0.98] text-white"
+                    style={{ fontSize: 'clamp(1.3rem, 5.1vw, 2rem)', letterSpacing: '-0.03em' }}
+                  >
+                    {d.title}
+                  </h3>
+                  <p className="mt-3 text-[0.92rem] leading-relaxed text-white/80">
+                    {d.desc}
+                  </p>
+
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {d.skills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="rounded-full border px-2.5 py-[3px] text-[0.56rem] font-semibold uppercase tracking-[0.1em]"
+                        style={{
+                          borderColor: `rgba(${YLW_RGB},0.25)`,
+                          color: YLW,
+                          backgroundColor: `rgba(${YLW_RGB},0.10)`,
+                          backdropFilter: 'blur(3px)',
+                        }}
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
+            </article>
+          )
+        })}
+      </div>
 
-            {/* Description */}
-            <p className="text-sm leading-relaxed text-white/50">{d.desc}</p>
+      {/* Mobile guidance + indicators */}
+      <div className="mt-5">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-white/55">
+            Листайте направления
+          </p>
+          <span style={{ color: YLW }} aria-hidden>
+            →
+          </span>
+        </div>
 
-            {/* Skills */}
-            <div className="mt-4 flex flex-wrap gap-1.5">
-              {d.skills.map((skill) => (
-                <span
-                  key={skill}
-                  className="rounded-full border px-2 py-[2px] text-[0.58rem] font-semibold uppercase tracking-[0.1em]"
-                  style={{
-                    borderColor: `rgba(${YLW_RGB},0.22)`,
-                    color: YLW,
-                    backgroundColor: `rgba(${YLW_RGB},0.06)`,
-                  }}
-                >
-                  {skill}
-                </span>
-              ))}
-            </div>
-          </motion.div>
-        ))}
+        <div
+          className="h-[2px] w-full overflow-hidden rounded-full"
+          style={{ background: `rgba(${YLW_RGB},0.12)` }}
+          aria-hidden
+        >
+          <div
+            className="h-full rounded-full transition-[width] duration-300"
+            style={{
+              width: `${((activeMobileDirectionIndex + 1) / DIRS.length) * 100}%`,
+              background: `linear-gradient(to right, ${YLW}, rgba(${YLW_RGB},0.42))`,
+            }}
+          />
+        </div>
+
+        <div className="mt-3 flex items-center justify-center gap-2">
+          {DIRS.map((d, idx) => {
+            const isActive = idx === activeMobileDirectionIndex
+            return (
+              <button
+                key={`dot-${d.n}`}
+                type="button"
+                onClick={() => scrollToMobileDirection(idx)}
+                className="h-2.5 rounded-full transition-all duration-300"
+                style={{
+                  width: isActive ? '22px' : '8px',
+                  background: isActive ? YLW : `rgba(${YLW_RGB},0.28)`,
+                  boxShadow: isActive ? `0 0 10px rgba(${YLW_RGB},0.48)` : 'none',
+                }}
+                aria-label={`Перейти к направлению ${d.n}`}
+                aria-current={isActive ? 'true' : undefined}
+              />
+            )
+          })}
+        </div>
       </div>
     </div>
   )

@@ -106,10 +106,20 @@ export function Hero() {
       id="home"
       className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden lg:justify-start"
     >
-      {/* ── Видео-фон ──────────────────────────────────────────────── */}
+      {/* ── Fallback image under video ──────────────────────────────── */}
+      <img
+        src={HERO_FALLBACK}
+        alt=""
+        className="absolute inset-0 block h-full w-full object-cover object-center"
+        loading="eager"
+        decoding="async"
+        aria-hidden
+      />
+
+      {/* ── Видео-фон (all screens) ─────────────────────────────────── */}
       <motion.video
         style={{ scale: videoScale }}
-        className="absolute inset-0 hidden h-full w-full object-cover object-center lg:block lg:object-[58%_center]"
+        className="absolute inset-0 h-full w-full object-cover object-center lg:object-[58%_center]"
         autoPlay
         muted
         loop
@@ -119,18 +129,6 @@ export function Hero() {
       >
         <source src={HERO_VIDEO} type="video/mp4" />
       </motion.video>
-
-      {/* ── Mobile fallback (debug): static hero image instead of video ── */}
-      <div
-        className="absolute inset-0 lg:hidden"
-        style={{
-          backgroundImage: `url(${HERO_FALLBACK})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-        aria-hidden
-      />
 
       {/* ── Racing grid overlay ────────────────────────────────────── */}
       <div
