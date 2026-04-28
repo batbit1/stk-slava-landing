@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { useRef } from 'react'
 
 const HERO_VIDEO = '/hero-video.mp4'
+const HERO_FALLBACK = '/racing-card.png'
 const YLW = '#D6FF00'          // кислотно-жёлтый акцент
 const YLW_RGB = '214, 255, 0'  // для rgba()
 
@@ -108,11 +109,28 @@ export function Hero() {
       {/* ── Видео-фон ──────────────────────────────────────────────── */}
       <motion.video
         style={{ scale: videoScale }}
-        className="absolute inset-0 h-full w-full object-cover object-center lg:object-[58%_center]"
-        autoPlay muted loop playsInline aria-hidden
+        className="absolute inset-0 hidden h-full w-full object-cover object-center lg:block lg:object-[58%_center]"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        aria-hidden
       >
         <source src={HERO_VIDEO} type="video/mp4" />
       </motion.video>
+
+      {/* ── Mobile fallback (debug): static hero image instead of video ── */}
+      <div
+        className="absolute inset-0 lg:hidden"
+        style={{
+          backgroundImage: `url(${HERO_FALLBACK})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+        aria-hidden
+      />
 
       {/* ── Racing grid overlay ────────────────────────────────────── */}
       <div
