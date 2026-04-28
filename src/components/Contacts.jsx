@@ -34,8 +34,16 @@ function formatPhoneMask(digits) {
   return s
 }
 
+// Normalize any entered phone to 11 digits starting with 7.
+function normalizePhoneForSubmit(raw) {
+  let digits = raw.replace(/\D/g, '')
+  if (digits.length === 10) digits = `7${digits}`
+  if (digits.length === 11 && digits.startsWith('8')) digits = `7${digits.slice(1)}`
+  return digits
+}
+
 /* ── Masked phone input ──────────────────────────────────────────────────── */
-function PhoneInput({ value, onChange, hasError }) {
+function PhoneInput({ value, onChange, hasError, id, name }) {
   function handleChange(e) {
     const digits = toPhoneDigits(e.target.value)
     onChange(formatPhoneMask(digits))
@@ -61,6 +69,8 @@ function PhoneInput({ value, onChange, hasError }) {
 
   return (
     <input
+      id={id}
+      name={name}
       type="tel"
       inputMode="numeric"
       value={value || '+7'}
@@ -180,7 +190,7 @@ function SuccessState() {
 const TELEGRAM_BOT_TOKEN = '7637457851:AAHqXxrMGy58KfIBqYjc7YbhQLBAn7nXjUc'
 const TELEGRAM_CHAT_ID = '8292491666'
 
-async function sendToTelegram({ name, phone, age }) {
+async function sendToTelegram({ name, phone, childAge }) {
   console.log(
     'Telegram url exists:',
     Boolean(TELEGRAM_BOT_TOKEN),
@@ -194,7 +204,7 @@ async function sendToTelegram({ name, phone, age }) {
     `🚀 <b>Новая заявка с сайта СТК Слава</b>\n\n` +
     `👤 <b>Имя родителя:</b> ${name}\n` +
     `📞 <b>Телефон:</b> ${phone}\n` +
-    `🏎 <b>Возраст ребёнка:</b> ${age}\n` +
+    `🏎 <b>Возраст ребёнка:</b> ${childAge}\n` +
     `🎁 <b>Интерес:</b> бесплатное первое занятие`
 
   const payload = { chat_id: TELEGRAM_CHAT_ID, text, parse_mode: 'HTML' }
@@ -204,6 +214,7 @@ async function sendToTelegram({ name, phone, age }) {
   const timeoutId = setTimeout(() => controller.abort(), 10000)
 
   try {
+    console.log('TELEGRAM FETCH START')
     const response = await fetch(
       `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
       {
@@ -213,6 +224,7 @@ async function sendToTelegram({ name, phone, age }) {
         signal: controller.signal,
       }
     )
+    console.log('TELEGRAM STATUS:', response.status)
 
     const data = await response.json()
     console.log('Telegram response:', data)
@@ -234,8 +246,9 @@ function LeadForm() {
 
   function validate() {
     const e = {}
+    const phoneDigits = normalizePhoneForSubmit(form.phone)
     if (!form.name.trim()) e.name = 'Введите имя'
-    if (toPhoneDigits(form.phone).length < 10) {
+    if (phoneDigits.length !== 11 || !phoneDigits.startsWith('7')) {
       e.phone = 'Введите корректный номер телефона'
     }
     if (!form.age) e.age = 'Выберите возраст ребёнка'
@@ -245,6 +258,15 @@ function LeadForm() {
   async function handleSubmit(e) {
     e.preventDefault()
     if (isLoading) return
+    console.log('MOBILE FORM SUBMIT START')
+
+    const name = form.name.trim()
+    const phone = form.phone
+    const childAge = form.age
+    console.log('FORM VALUES:', { name, phone, childAge })
+
+    const phoneDigits = normalizePhoneForSubmit(phone)
+    console.log('PHONE DIGITS:', phoneDigits)
 
     const errs = validate()
     if (Object.keys(errs).length > 0) {
@@ -255,11 +277,15 @@ function LeadForm() {
     try {
       setIsLoading(true)
       setStatus('loading')
-      await sendToTelegram(form)
+      await sendToTelegram({
+        name,
+        phone: `+${phoneDigits}`,
+        childAge,
+      })
       setForm({ name: '', phone: '', age: '' })
       setStatus('success')
     } catch (err) {
-      console.error('Lead form submit error:', err)
+      console.error('MOBILE FORM ERROR:', err)
       setStatus('error')
     } finally {
       setIsLoading(false)
@@ -290,6 +316,8 @@ function LeadForm() {
           {/* Name */}
           <Field label="Имя родителя" error={errors.name}>
             <input
+              id="lead-name"
+              name="name"
               type="text"
               placeholder="Александр"
               value={form.name}
@@ -301,6 +329,8 @@ function LeadForm() {
           {/* Phone */}
           <Field label="Телефон" error={errors.phone}>
             <PhoneInput
+              id="lead-phone"
+              name="phone"
               value={form.phone}
               onChange={val => handleChange('phone', val)}
               hasError={!!errors.phone}
@@ -310,6 +340,8 @@ function LeadForm() {
           {/* Age */}
           <Field label="Возраст ребёнка" error={errors.age}>
             <select
+              id="lead-child-age"
+              name="childAge"
               value={form.age}
               onChange={e => handleChange('age', e.target.value)}
               className={inputCls(!!errors.age) + ' cursor-pointer appearance-none'}
@@ -342,7 +374,7 @@ function LeadForm() {
           <motion.button
             type="submit"
             disabled={isLoading}
-            className="btn-ylw relative mt-2 flex min-h-[54px] w-full items-center justify-center overflow-hidden rounded-xl text-sm font-bold text-[#070708] disabled:opacity-70"
+            className="btn-ylw relative z-10 mt-2 flex min-h-[54px] w-full items-center justify-center overflow-hidden rounded-xl text-sm font-bold text-[#070708] pointer-events-auto disabled:opacity-70"
             style={{ background: YLW }}
             whileHover={{ scale: 1.015 }}
             whileTap={{ scale: 0.985 }}
