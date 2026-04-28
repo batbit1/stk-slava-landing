@@ -177,10 +177,19 @@ function SuccessState() {
 }
 
 /* ── Telegram config ─────────────────────────────────────────────────────── */
-const TG_TOKEN   = '7637457851:AAHqXxrMGy58KfIBqYjc7YbhQLBAn7nXjUc'
-const TG_CHAT_ID = '8292491666'
+const TELEGRAM_BOT_TOKEN = '7637457851:AAHqXxrMGy58KfIBqYjc7YbhQLBAn7nXjUc'
+const TELEGRAM_CHAT_ID = '8292491666'
 
 async function sendToTelegram({ name, phone, age }) {
+  console.log(
+    'Telegram url exists:',
+    Boolean(TELEGRAM_BOT_TOKEN),
+    Boolean(TELEGRAM_CHAT_ID),
+  )
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+    throw new Error('Missing Telegram credentials')
+  }
+
   const text =
     `🚀 <b>Новая заявка с сайта СТК Слава</b>\n\n` +
     `👤 <b>Имя родителя:</b> ${name}\n` +
@@ -188,18 +197,31 @@ async function sendToTelegram({ name, phone, age }) {
     `🏎 <b>Возраст ребёнка:</b> ${age}\n` +
     `🎁 <b>Интерес:</b> бесплатное первое занятие`
 
-  const res = await fetch(
-    `https://api.telegram.org/bot${TG_TOKEN}/sendMessage`,
-    {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ chat_id: TG_CHAT_ID, text, parse_mode: 'HTML' }),
-    }
-  )
+  const payload = { chat_id: TELEGRAM_CHAT_ID, text, parse_mode: 'HTML' }
+  console.log('Sending Telegram lead', payload)
 
-  if (!res.ok) {
-    const body = await res.text()
-    throw new Error(`Telegram API ${res.status}: ${body}`)
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
+
+  try {
+    const response = await fetch(
+      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      }
+    )
+
+    const data = await response.json()
+    console.log('Telegram response:', data)
+
+    if (!response.ok || !data.ok) {
+      throw new Error(data?.description || 'Telegram API error')
+    }
+  } finally {
+    clearTimeout(timeoutId)
   }
 }
 
@@ -208,6 +230,7 @@ function LeadForm() {
   const [form, setForm]     = useState({ name: '', phone: '', age: '' })
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState('idle') // idle | loading | success | error
+  const [isLoading, setIsLoading] = useState(false)
 
   function validate() {
     const e = {}
@@ -221,20 +244,25 @@ function LeadForm() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (isLoading) return
+
     const errs = validate()
     if (Object.keys(errs).length > 0) {
       setErrors(errs)
       return
     }
     setErrors({})
-    setStatus('loading')
     try {
+      setIsLoading(true)
+      setStatus('loading')
       await sendToTelegram(form)
       setForm({ name: '', phone: '', age: '' })
       setStatus('success')
     } catch (err) {
-      console.error('[LeadForm] Ошибка отправки заявки:', err)
+      console.error('Lead form submit error:', err)
       setStatus('error')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -305,7 +333,7 @@ function LeadForm() {
                 transition={{ duration: 0.25 }}
                 className="rounded-xl border border-[#ff5a5a]/30 bg-[#ff5a5a]/10 px-4 py-3 text-sm text-[#ff9090]"
               >
-                Не удалось отправить заявку. Пожалуйста, попробуйте ещё раз.
+                Не удалось отправить заявку. Попробуйте ещё раз или напишите нам напрямую.
               </motion.div>
             )}
           </AnimatePresence>
@@ -313,7 +341,7 @@ function LeadForm() {
           {/* Submit */}
           <motion.button
             type="submit"
-            disabled={status === 'loading'}
+            disabled={isLoading}
             className="btn-ylw relative mt-2 flex min-h-[54px] w-full items-center justify-center overflow-hidden rounded-xl text-sm font-bold text-[#070708] disabled:opacity-70"
             style={{ background: YLW }}
             whileHover={{ scale: 1.015 }}
@@ -321,7 +349,7 @@ function LeadForm() {
             transition={{ duration: 0.18 }}
           >
             <AnimatePresence mode="wait">
-              {status === 'loading' ? (
+              {isLoading ? (
                 <motion.span
                   key="loading"
                   initial={{ opacity: 0 }}
