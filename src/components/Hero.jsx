@@ -106,25 +106,25 @@ export function Hero() {
       id="home"
       className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden lg:justify-start"
     >
-      {/* ── Fallback image under video ──────────────────────────────── */}
+      {/* ── Mobile fallback image ───────────────────────────────────── */}
       <img
         src={HERO_FALLBACK}
         alt=""
-        className="absolute inset-0 block h-full w-full object-cover object-center"
+        className="absolute inset-0 block h-full w-full object-cover object-center lg:hidden"
         loading="eager"
         decoding="async"
         aria-hidden
       />
 
-      {/* ── Видео-фон (all screens) ─────────────────────────────────── */}
+      {/* ── Видео-фон (desktop only) ────────────────────────────────── */}
       <motion.video
         style={{ scale: videoScale }}
-        className="absolute inset-0 h-full w-full object-cover object-center lg:object-[58%_center]"
+        className="absolute inset-0 hidden h-full w-full object-cover object-center lg:block lg:object-[58%_center]"
         autoPlay
         muted
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
         aria-hidden
       >
         <source src={HERO_VIDEO} type="video/mp4" />
