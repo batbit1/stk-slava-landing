@@ -186,51 +186,21 @@ function SuccessState() {
   )
 }
 
-/* ── Telegram config ─────────────────────────────────────────────────────── */
-const TELEGRAM_BOT_TOKEN = '7637457851:AAHqXxrMGy58KfIBqYjc7YbhQLBAn7nXjUc'
-const TELEGRAM_CHAT_ID = '8292491666'
-
-async function sendToTelegram({ name, phone, childAge }) {
-  console.log(
-    'Telegram url exists:',
-    Boolean(TELEGRAM_BOT_TOKEN),
-    Boolean(TELEGRAM_CHAT_ID),
-  )
-  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-    throw new Error('Missing Telegram credentials')
-  }
-
-  const text =
-    `🚀 <b>Новая заявка с сайта СТК Слава</b>\n\n` +
-    `👤 <b>Имя родителя:</b> ${name}\n` +
-    `📞 <b>Телефон:</b> ${phone}\n` +
-    `🏎 <b>Возраст ребёнка:</b> ${childAge}\n` +
-    `🎁 <b>Интерес:</b> бесплатное первое занятие`
-
-  const payload = { chat_id: TELEGRAM_CHAT_ID, text, parse_mode: 'HTML' }
-  console.log('Sending Telegram lead', payload)
-
+async function sendLeadRequest({ name, phone, childAge }) {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 10000)
 
   try {
-    console.log('TELEGRAM FETCH START')
-    const response = await fetch(
-      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      }
-    )
-    console.log('TELEGRAM STATUS:', response.status)
+    const response = await fetch('/api/send-lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, phone, childAge }),
+      signal: controller.signal,
+    })
 
-    const data = await response.json()
-    console.log('Telegram response:', data)
-
-    if (!response.ok || !data.ok) {
-      throw new Error(data?.description || 'Telegram API error')
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      throw new Error(data?.error || 'Lead API error')
     }
   } finally {
     clearTimeout(timeoutId)
@@ -277,7 +247,7 @@ function LeadForm() {
     try {
       setIsLoading(true)
       setStatus('loading')
-      await sendToTelegram({
+      await sendLeadRequest({
         name,
         phone: `+${phoneDigits}`,
         childAge,
